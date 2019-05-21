@@ -1,16 +1,13 @@
-# jira-tool
+# Jira-sync
 
-> A Vue.js Chrome Extension Project
+![](https://github.com/hubingliang/jira-sync/blob/master/static/icons/main.png)
 
-## Build Setup
+Synchronize the status of parent and child tasks for Jira.
 
-``` bash
-# install dependencies
-npm install
+## Install
 
-# serve with auto reload && import the **dist** folder in the Chrome browser
-npm run dev
+```bash
+# install extension
+npm run zip
 
-# build for production with minification && crx package
-npm run build
 ```
