@@ -9,41 +9,56 @@
         @click="resetProjectId"
       >{{projectKey}}</span>
     </h4>
-    <input
-      class="input-block"
-      type="text"
-      v-if="isChange"
-      placeholder="Project Key"
-      v-model="projectKey"
-    >
+    <div class="row">
+      <input
+        class="input-block"
+        type="text"
+        v-if="isChange"
+        placeholder="Project Key"
+        v-model="projectKey"
+      >
+      <button
+        v-if="isChange"
+        @click="run('updateParentTask', projectKey);isChange = false"
+        :disabled="!projectKey"
+      >Save</button>
+    </div>
     <section class="parents" v-if="parentTasks && parentTasks.length>0">
       <div
         class="card"
         v-for="(task,index) in parentTasks"
         :key="index"
-        @click="run('changeStatus',task)"
+        @click="run('changeStatus',{ task, projectKey })"
       >
-        <div class="card-body" :class="{'background-warning':task.isOnline}">
+        <div class="card-body" :class="{'background-warning': task.isOnline}">
           <h4 class="card-title">{{ task.key }}</h4>
+          <h5 class="card-subtitle">{{ task.assigneeName }}</h5>
           <p class="card-text">{{ task.summary }}</p>
+        </div>
+        <div class="card-footer">
+          <span>{{ task.statusName }}</span>
         </div>
       </div>
     </section>
 
     <div class="button-box">
-      <button @click="run('sync', projectKey)" :disabled="!projectKey" class="button">Sync Status</button>
+      <button @click="run('sync', projectKey)" :disabled="isChange" class="button">Sync Status</button>
+      <button @click="run('getParentTask', projectKey)" :disabled="isChange" class="button">Add Tag</button>
       <button
-        @click="run('getParentTask',projectKey)"
-        :disabled="!projectKey"
         class="button"
-      >Add Tag</button>
+        @click="exportTemplate"
+        v-if="parentTasks && parentTasks.length>0"
+      >Export Template</button>
     </div>
-
     <div class="alert alert-danger" v-if="!isJiraPage">Please click the button on the jira page</div>
   </div>
 </template>
 
 <script>
+require("babel-polyfill");
+import html2canvas from "html2canvas";
+import { saveAs } from "file-saver";
+
 export default {
   name: "app",
   data() {
@@ -65,37 +80,34 @@ export default {
     }
   },
   methods: {
-    run(action, payload) {
+    async run(action, payload) {
       switch (action) {
         case "sync":
           localStorage.setItem("projectKey", payload);
           this.callJira(action, payload);
           break;
         case "updateParentTask":
+          localStorage.setItem("projectKey", payload);
           this.callJira(action, payload);
           break;
         case "getParentTask":
-          const projectKey = localStorage.getItem("projectKey");
-          if (projectKey) {
-            if (projectKey === this.projectKey) {
-              this.callJira(action);
-            } else {
-              this.callJira("updateParentTask", payload);
-            }
-          } else {
-            this.callJira("updateParentTask", payload);
-          }
+          await this.callJira("updateParentTask", payload);
+          this.callJira("getParentTask", payload);
           break;
         case "changeStatus":
           this.callJira(action, payload);
           break;
+        case "reset":
+          this.callJira(action);
         default:
           break;
       }
     },
     resetProjectId() {
+      localStorage.removeItem("projectKey");
       this.parentTasks = [];
       this.isChange = true;
+      this.run("reset");
     },
     callJira(action, value = null) {
       chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -109,8 +121,14 @@ export default {
               this.parentTasks = response;
             }
           );
-          this.isChange = false;
         }
+      });
+    },
+    exportTemplate() {
+      html2canvas(document.body).then(canvas => {
+        canvas.toBlob(blob => {
+          saveAs(blob, "pretty image.png");
+        });
       });
     }
   }
@@ -151,7 +169,7 @@ body {
   .button-box {
     display: flex;
     justify-content: space-around;
-    width: 300px;
+    min-width: 300px;
     button {
       margin: 20px 10px;
     }

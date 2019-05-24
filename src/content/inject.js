@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'changeStatus') {
     const parentTask = JSON.parse(localStorage.getItem('parentTask'))
     parentTask.map(parent => {
-      if (parent.key === request.value.key) {
+      if (parent.key === request.value.task.key) {
         parent.isOnline = !parent.isOnline
       }
     })

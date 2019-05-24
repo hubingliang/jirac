@@ -14,6 +14,8 @@
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
     "axios": "^0.18.0",
+    "file-saver": "^2.0.2",
+    "html2canvas": "^1.0.0-rc.1",
     "vue": "^2.5.11"
   },
   "browserslist": [
