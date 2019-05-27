@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "webpack --config ./build/webpack.dev.conf.js --hide-modules",
     "build": "node build/build.js",
-    "zip": "zip -q -r Jira-sync.zip dist",
+    "zip": "zip -q -r Jirac.zip dist",
     "clear": "rm -rf chrome-ext.crx extension.zip dist"
   },
   "dependencies": {

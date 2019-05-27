@@ -181,7 +181,7 @@ export default {
       const template = this.$refs.template;
       html2canvas(template).then(canvas => {
         canvas.toBlob(blob => {
-          saveAs(blob, "pretty image.png");
+          saveAs(blob, "image.png");
         });
       });
     },
@@ -258,6 +258,9 @@ body {
       position: relative;
       .card-text {
         line-height: 20px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        word-break: break-all;
       }
       .project-key {
         position: absolute;

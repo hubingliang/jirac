@@ -1,7 +1,7 @@
 module.exports = {
-  name: 'Jira-sync',
-  version: '1.0.0',
-  description: 'Jira-sync',
+  name: 'Jirac',
+  version: '1.1.0',
+  description: 'Jirac',
   author: 'BrownHu',
   manifest_version: 2,
   icons: {
