@@ -100,10 +100,10 @@ module.exports = {
         from: resolve('static'),
       },
     ]),
-    new ChromeReloadPlugin({
-      port: 23333,
-      manifest: resolve('src/manifest.js'),
-    }),
+    // new ChromeReloadPlugin({
+    //   port: 23333,
+    //   manifest: resolve('src/manifest.js'),
+    // }),
   ],
   performance: {
     hints: false,

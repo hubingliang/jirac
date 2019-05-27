@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <img src="@/assets/main.png" class="border-none" alt>
-    <h3 class="margin">{{ msg }}</h3>
+    <img src="@/assets/main.png" class="border-none logo" alt>
+    <h3>{{ name }}</h3>
     <h4 v-if="!isChange" class="margin">
       Project Key
       <span
@@ -9,21 +9,15 @@
         @click="resetProjectId"
       >{{projectKey}}</span>
     </h4>
-    <div class="row">
-      <input
-        class="input-block"
-        type="text"
-        v-if="isChange"
-        placeholder="Project Key"
-        v-model="projectKey"
-      >
-      <button
-        v-if="isChange"
-        @click="run('updateParentTask', projectKey);isChange = false"
-        :disabled="!projectKey"
-      >Save</button>
-    </div>
-    <section class="parents" v-if="parentTasks && parentTasks.length>0">
+    <input
+      class="input-block"
+      type="text"
+      v-if="isChange"
+      placeholder="Project Key"
+      v-model="projectKey"
+    >
+
+    <section class="parents" v-if="parentTasks && parentTasks.length > 0 && !isCreateTemplate">
       <div
         class="card"
         v-for="(task,index) in parentTasks"
@@ -41,16 +35,69 @@
       </div>
     </section>
 
+    <section class="template" ref="template" v-if="isCreateTemplate">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">{{ title }}</h4>
+          <!-- <h5 class="card-subtitle">{{ currentDate() }}</h5> -->
+          <p class="card-text">{{ postscript }}</p>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>JIRA</th>
+                <th>Summary</th>
+                <th>Assignee</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item,index) in parentTasks.filter(task=>task.isOnline)" :key="index">
+                <td>{{ index + 1 }}</td>
+                <td class="key">{{ item.key }}</td>
+                <td>{{ item.summary }}</td>
+                <td class="name">{{ item.assigneeName }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>
+          <span class="badge secondary project-key">{{ projectKey }}</span>
+        </h4>
+        <div class="title">
+          <img src="@/assets/main.png" class="icon border-none" alt>
+          <h5>{{ name }}</h5>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="isCreateTemplate">
+      <div class="form-group">
+        <label>title</label>
+        <input type="text" placeholder="title" v-model="title">
+      </div>
+      <div class="form-group">
+        <label>Postscript</label>
+        <textarea placeholder="Postscript" v-model="postscript" class="postscript"></textarea>
+      </div>
+    </section>
+
     <div class="button-box">
-      <button @click="run('sync', projectKey)" :disabled="isChange" class="button">Sync Status</button>
-      <button @click="run('getParentTask', projectKey)" :disabled="isChange" class="button">Add Tag</button>
+      <button @click="run('sync', projectKey)" v-if="!isChange" class="button">Sync Status</button>
+      <button @click="run('getParentTask', projectKey)" v-if="!isChange" class="button">Add Tag</button>
       <button
         class="button"
-        @click="exportTemplate"
-        v-if="parentTasks && parentTasks.length>0"
-      >Export Template</button>
+        @click="isCreateTemplate = true"
+        v-if="parentTasks && parentTasks.length > 0 && !isCreateTemplate"
+      >Create Template</button>
+      <button class="button" @click="exportTemplate" v-if="isCreateTemplate">Export Img</button>
+      <button
+        v-if="isChange"
+        @click="run('updateParentTask', projectKey);isChange = false"
+        :disabled="!projectKey"
+      >Save</button>
     </div>
-    <div class="alert alert-danger" v-if="!isJiraPage">Please click the button on the jira page</div>
+
+    <div class="alert alert-danger" v-if="!isJiraPage">Please open JIRAC on the jira page</div>
   </div>
 </template>
 
@@ -58,16 +105,21 @@
 require("babel-polyfill");
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
+import dayjs from "dayjs";
 
 export default {
   name: "app",
   data() {
     return {
-      msg: "JIRA SYNC",
+      name: "JIRAC",
       projectKey: null,
       isJiraPage: true,
       isChange: false,
-      parentTasks: []
+      parentTasks: [],
+      templateList: [],
+      isCreateTemplate: false,
+      title: "1.1.1",
+      postscript: "PS:"
     };
   },
   created() {
@@ -92,6 +144,7 @@ export default {
           break;
         case "getParentTask":
           await this.callJira("updateParentTask", payload);
+          this.isCreateTemplate = false;
           this.callJira("getParentTask", payload);
           break;
         case "changeStatus":
@@ -125,11 +178,15 @@ export default {
       });
     },
     exportTemplate() {
-      html2canvas(document.body).then(canvas => {
+      const template = this.$refs.template;
+      html2canvas(template).then(canvas => {
         canvas.toBlob(blob => {
           saveAs(blob, "pretty image.png");
         });
       });
+    },
+    currentDate() {
+      return dayjs().format("YYYY-MM-DD HH:mm:ss");
     }
   }
 };
@@ -159,9 +216,10 @@ body {
   flex-wrap: wrap;
   padding-top: 30px;
   img {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     border: none;
+    margin-bottom: 20px;
   }
   .project-id {
     cursor: pointer;
@@ -184,6 +242,52 @@ body {
       cursor: pointer;
       width: 240px;
       margin-bottom: 20px;
+    }
+  }
+  .postscript {
+    width: 25rem;
+    height: 200px;
+  }
+  .template {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    .card {
+      width: 27rem;
+      position: relative;
+      .card-text {
+        line-height: 20px;
+      }
+      .project-key {
+        position: absolute;
+        right: 25px;
+        top: 25px;
+      }
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 20px;
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        img {
+          width: 20px;
+          margin: 0;
+          margin-right: 5px;
+          height: 20px;
+        }
+      }
+      .table {
+        margin-bottom: 20px;
+        .key {
+          width: 60px;
+        }
+        .name {
+          width: 100px;
+        }
+      }
     }
   }
 }

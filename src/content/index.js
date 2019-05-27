@@ -245,9 +245,9 @@ const changeStatus = parents => {
 }
 if (window.location.href.includes('jira')) {
   window.onload = () => {
-    const parent = JSON.parse(localStorage.getItem('parentTask'))
-    if (parent) {
-      changeStatus(parent)
+    const parents = JSON.parse(localStorage.getItem('parentTask'))
+    if (parents) {
+      changeStatus(parents)
     }
   }
   window.addEventListener(

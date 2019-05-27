@@ -22,6 +22,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     localStorage.setItem('parentTask', JSON.stringify(parentTask))
     window.postMessage({ action: 'changeStatus', value: parentTask }, '*')
     sendResponse(JSON.parse(localStorage.getItem('parentTask')))
+  } else if (request.action === 'reset') {
+    localStorage.removeItem('parentTask')
   }
 })
 // chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
