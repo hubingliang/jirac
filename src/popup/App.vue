@@ -24,7 +24,7 @@
         :key="index"
         @click="run('changeStatus',{ task, projectKey })"
       >
-        <div class="card-body" :class="{'background-warning': task.isOnline}">
+        <div class="card-body" :class="{'background-warning': task.summary.includes('#Jirac#')}">
           <h4 class="card-title">{{ task.key }}</h4>
           <h5 class="card-subtitle">{{ task.assigneeName }}</h5>
           <p class="card-text">{{ task.summary }}</p>
@@ -51,7 +51,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(item,index) in parentTasks.filter(task=>task.isOnline)" :key="index">
+              <tr
+                v-for="(item,index) in parentTasks.filter(task=>task.summary.includes('#Jirac#'))"
+                :key="index"
+              >
                 <td>{{ index + 1 }}</td>
                 <td class="key">{{ item.key }}</td>
                 <td>{{ item.summary }}</td>

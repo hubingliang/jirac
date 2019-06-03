@@ -202,66 +202,32 @@ const sync = async projectKey => {
 }
 const updateParentTask = async projectKey => {
   const { allParents } = await getIssueData(projectKey)
-  allParents.map(_ => {
-    _.isOnline = false
-  })
-  const domParents = Array.from(document.querySelectorAll('.ghx-swimlane'))
-  domParents.map(_ => {
-    const summary = _.querySelector('.ghx-summary').innerHTML
-    if (summary.includes('#jirac#')) {
-      _.style.background = '#F5F0C6'
-      const key = _.querySelector('.ghx-parent-key').innerHTML
-      allParents.map(parent => {
-        if (parent.key === key) {
-          parent.isOnline = true
-        }
-      })
-    } else {
-      _.style.background = 'none'
-    }
-  })
   localStorage.setItem('parentTask', JSON.stringify(allParents))
+  updateTaskStatus()
 }
-const changeStatus = async projectKey => {
-  const { allParents } = await getIssueData(projectKey)
-  allParents.map(_ => {
-    _.isOnline = false
-  })
-  const domParents = Array.from(document.querySelectorAll('.ghx-swimlane'))
-  domParents.map(_ => {
-    const summary = _.querySelector('.ghx-summary')
-    if (summary.includes('#jirac#')) {
-      _.style.background = '#F5F0C6'
-      const key = _.querySelector('.ghx-parent-key').innerHTML
-      allParents.map(parent => {
-        if (parent.key === key) {
-          parent.isOnline = true
-        }
-      })
-    } else {
-      _.style.background = 'none'
-    }
-  })
-}
-const initTaskStatus = () => {
+const updateTaskStatus = () => {
   const domParents = Array.from(document.querySelectorAll('.ghx-swimlane'))
   domParents.map(_ => {
     const summary = _.querySelector('.ghx-summary').innerHTML
-    if (summary.includes('#jirac#')) {
-      _.style.background = '#F5F0C6'
+    if (summary.includes('#Jirac#')) {
+      _.querySelector('.ghx-swimlane-header').style.background = '#F5F0C6'
     } else {
-      _.style.background = 'none'
+      _.querySelector('.ghx-swimlane-header').style.background = 'none'
     }
   })
 }
-const changeSummary = async task => {
+const changeSummary = async (task, projectKey) => {
   try {
     const token = document.cookie.replace(
       /(?:(?:^|.*;\s*)atlassian.xsrf.token\s*\=\s*([^;]*).*$)|^.*$/,
       '$1',
     )
+    const newSummary = task.summary.includes('#Jirac#')
+      ? task.summary.replace('#Jirac#', '')
+      : `#Jirac# ${task.summary}`
+    console.log(newSummary)
     const data = new URLSearchParams()
-    data.append('summary', `#Jirac# ${task.summary}`)
+    data.append('summary', newSummary)
     data.append('issueId', task.id)
     data.append('atl_token', token)
     data.append('singleFieldEdit', true)
@@ -277,11 +243,14 @@ const changeSummary = async task => {
       },
     })
   } finally {
+    const { allParents } = await getIssueData(projectKey)
+    localStorage.setItem('parentTask', JSON.stringify(allParents))
+    location.reload()
   }
 }
 if (window.location.href.includes('jira')) {
   window.onload = () => {
-    initTaskStatus()
+    updateTaskStatus()
   }
   window.addEventListener(
     'message',
@@ -292,8 +261,7 @@ if (window.location.href.includes('jira')) {
       } else if (event.data.action === 'updateParentTask') {
         updateParentTask(event.data.value)
       } else if (event.data.action === 'changeStatus') {
-        changeSummary(event.data.task)
-        updateParentTask(event.data.projetKey)
+        changeSummary(event.data.task, event.data.projectKey)
       }
     },
     false,
