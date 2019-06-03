@@ -202,53 +202,86 @@ const sync = async projectKey => {
 }
 const updateParentTask = async projectKey => {
   const { allParents } = await getIssueData(projectKey)
-  const parentTasks = JSON.parse(localStorage.getItem('parentTask'))
-  let newParents = []
-  if (parentTasks) {
-    newParents = allParents.map(parent => {
-      let newparent = null
-      parentTasks.map(currentParent => {
-        if (parent.key === currentParent.key) {
-          if (currentParent.isOnline) {
-            parent.isOnline = true
-            newparent = parent
-          } else {
-            newparent = currentParent
-          }
+  allParents.map(_ => {
+    _.isOnline = false
+  })
+  const domParents = Array.from(document.querySelectorAll('.ghx-swimlane'))
+  domParents.map(_ => {
+    const summary = _.querySelector('.ghx-summary').innerHTML
+    if (summary.includes('#jirac#')) {
+      _.style.background = '#F5F0C6'
+      const key = _.querySelector('.ghx-parent-key').innerHTML
+      allParents.map(parent => {
+        if (parent.key === key) {
+          parent.isOnline = true
         }
       })
-      return newparent
-    })
-  } else {
-    newParents = allParents.map(parent => {
-      parent.isOnline = false
-      return parent
-    })
-  }
-  localStorage.setItem('parentTask', JSON.stringify(newParents))
+    } else {
+      _.style.background = 'none'
+    }
+  })
+  localStorage.setItem('parentTask', JSON.stringify(allParents))
 }
-const changeStatus = parents => {
-  const domParents = Array.from(document.querySelectorAll('.ghx-parent-key'))
-  if (parents) {
-    domParents.map(_ => {
-      parents.map(parent => {
-        if (_.innerHTML === parent.key) {
-          if (parent.isOnline) {
-            _.style.background = '#F5F0C6'
-          } else {
-            _.style.background = 'none'
-          }
+const changeStatus = async projectKey => {
+  const { allParents } = await getIssueData(projectKey)
+  allParents.map(_ => {
+    _.isOnline = false
+  })
+  const domParents = Array.from(document.querySelectorAll('.ghx-swimlane'))
+  domParents.map(_ => {
+    const summary = _.querySelector('.ghx-summary')
+    if (summary.includes('#jirac#')) {
+      _.style.background = '#F5F0C6'
+      const key = _.querySelector('.ghx-parent-key').innerHTML
+      allParents.map(parent => {
+        if (parent.key === key) {
+          parent.isOnline = true
         }
       })
+    } else {
+      _.style.background = 'none'
+    }
+  })
+}
+const initTaskStatus = () => {
+  const domParents = Array.from(document.querySelectorAll('.ghx-swimlane'))
+  domParents.map(_ => {
+    const summary = _.querySelector('.ghx-summary').innerHTML
+    if (summary.includes('#jirac#')) {
+      _.style.background = '#F5F0C6'
+    } else {
+      _.style.background = 'none'
+    }
+  })
+}
+const changeSummary = async task => {
+  try {
+    const token = document.cookie.replace(
+      /(?:(?:^|.*;\s*)atlassian.xsrf.token\s*\=\s*([^;]*).*$)|^.*$/,
+      '$1',
+    )
+    const data = new URLSearchParams()
+    data.append('summary', `#Jirac# ${task.summary}`)
+    data.append('issueId', task.id)
+    data.append('all_token', token)
+    data.append('singleFieldEdit', true)
+    data.append('fieldsToForcePresent', 'summary')
+    data.append('skipScreenCheck', true)
+    data.append('rapidViewId', window.localStorage.getItem('gh.latestRapidViewId'))
+    await axios.post(`/secure/DetailsViewAjaxIssueAction.jspa?decorator=none`, data, {
+      headers: {
+        'Accept': '*/*',
+        'X-AUSERNAME': 'bingliang.hu%40advance.ai',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-SITEMESH-OFF': true,
+      },
     })
+  } finally {
   }
 }
 if (window.location.href.includes('jira')) {
   window.onload = () => {
-    const parents = JSON.parse(localStorage.getItem('parentTask'))
-    if (parents) {
-      changeStatus(parents)
-    }
+    initTaskStatus()
   }
   window.addEventListener(
     'message',
@@ -259,7 +292,8 @@ if (window.location.href.includes('jira')) {
       } else if (event.data.action === 'updateParentTask') {
         updateParentTask(event.data.value)
       } else if (event.data.action === 'changeStatus') {
-        changeStatus(event.data.value)
+        changeSummary(event.data.task)
+        updateParentTask(event.data.projetKey)
       }
     },
     false,

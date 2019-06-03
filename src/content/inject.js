@@ -13,14 +13,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'getParentTask') {
     sendResponse(JSON.parse(localStorage.getItem('parentTask')))
   } else if (request.action === 'changeStatus') {
-    const parentTask = JSON.parse(localStorage.getItem('parentTask'))
-    parentTask.map(parent => {
-      if (parent.key === request.value.task.key) {
-        parent.isOnline = !parent.isOnline
-      }
-    })
-    localStorage.setItem('parentTask', JSON.stringify(parentTask))
-    window.postMessage({ action: 'changeStatus', value: parentTask }, '*')
+    window.postMessage(
+      { action: 'changeStatus', task: request.value.task, projetKey: request.value.projectKey },
+      '*',
+    )
     sendResponse(JSON.parse(localStorage.getItem('parentTask')))
   } else if (request.action === 'reset') {
     localStorage.removeItem('parentTask')
