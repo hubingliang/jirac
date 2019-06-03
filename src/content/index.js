@@ -263,14 +263,14 @@ const changeSummary = async task => {
     const data = new URLSearchParams()
     data.append('summary', `#Jirac# ${task.summary}`)
     data.append('issueId', task.id)
-    data.append('all_token', token)
+    data.append('atl_token', token)
     data.append('singleFieldEdit', true)
     data.append('fieldsToForcePresent', 'summary')
     data.append('skipScreenCheck', true)
     data.append('rapidViewId', window.localStorage.getItem('gh.latestRapidViewId'))
     await axios.post(`/secure/DetailsViewAjaxIssueAction.jspa?decorator=none`, data, {
       headers: {
-        'Accept': '*/*',
+        Accept: '*/*',
         'X-AUSERNAME': 'bingliang.hu%40advance.ai',
         'X-Requested-With': 'XMLHttpRequest',
         'X-SITEMESH-OFF': true,
