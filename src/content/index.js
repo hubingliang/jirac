@@ -190,9 +190,6 @@ const syncStatus = async (parent, allIssues, allStatus, transitionsData, allMatr
 const sync = async projectKey => {
   const { transitionsData, allMatrix, allStatus, projectId } = await initProjectData(projectKey)
   const { allIssues, allParents } = await getIssueData(projectKey)
-  if (!localStorage.getItem('parentTask')) {
-    localStorage.setItem('parentTask', JSON.stringify(allParents))
-  }
   await Promise.all(
     allParents.map(parent => {
       return syncStatus(parent, allIssues, allStatus, transitionsData, allMatrix, projectId)
@@ -202,7 +199,7 @@ const sync = async projectKey => {
 }
 const updateParentTask = async projectKey => {
   const { allParents } = await getIssueData(projectKey)
-  localStorage.setItem('parentTask', JSON.stringify(allParents))
+  window.postMessage({ action: 'updatePopupTask', value: allParents }, '*')
   updateTaskStatus()
 }
 const updateTaskStatus = () => {
@@ -225,7 +222,6 @@ const changeSummary = async (task, projectKey) => {
     const newSummary = task.summary.includes('#Jirac#')
       ? task.summary.replace('#Jirac#', '')
       : `#Jirac# ${task.summary}`
-    console.log(newSummary)
     const data = new URLSearchParams()
     data.append('summary', newSummary)
     data.append('issueId', task.id)
@@ -243,8 +239,7 @@ const changeSummary = async (task, projectKey) => {
       },
     })
   } finally {
-    const { allParents } = await getIssueData(projectKey)
-    localStorage.setItem('parentTask', JSON.stringify(allParents))
+    await updateParentTask(projectKey)
     location.reload()
   }
 }
@@ -259,7 +254,7 @@ if (window.location.href.includes('jira')) {
       if (event.data.action === 'sync') {
         sync(event.data.value)
       } else if (event.data.action === 'updateParentTask') {
-        updateParentTask(event.data.value)
+        updateParentTask(event.data.projectKey)
       } else if (event.data.action === 'changeStatus') {
         changeSummary(event.data.task, event.data.projectKey)
       }

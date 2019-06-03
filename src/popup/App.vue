@@ -86,18 +86,14 @@
 
     <div class="button-box">
       <button @click="run('sync', projectKey)" v-if="!isChange" class="button">Sync Status</button>
-      <button @click="run('getParentTask', projectKey)" v-if="!isChange" class="button">Add Tag</button>
+      <button @click="run('updateParentTask', projectKey)" v-if="!isChange" class="button">Add Tag</button>
       <button
         class="button"
         @click="isCreateTemplate = true"
         v-if="parentTasks && parentTasks.length > 0 && !isCreateTemplate"
       >Create Template</button>
       <button class="button" @click="exportTemplate" v-if="isCreateTemplate">Export Img</button>
-      <button
-        v-if="isChange"
-        @click="run('updateParentTask', projectKey);isChange = false"
-        :disabled="!projectKey"
-      >Save</button>
+      <button v-if="isChange" @click="isChange = false" :disabled="!projectKey">Save</button>
     </div>
 
     <div class="alert alert-danger" v-if="!isJiraPage">Please open JIRAC on the jira page</div>
@@ -129,10 +125,14 @@ export default {
     const projectKey = localStorage.getItem("projectKey");
     if (projectKey) {
       this.projectKey = projectKey;
-      this.run("updateParentTask", projectKey);
+      // this.run("updateParentTask", projectKey);
     } else {
       this.isChange = true;
     }
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      console.log(request);
+      this.parentTasks = request;
+    });
   },
   methods: {
     async run(action, payload) {
@@ -145,16 +145,9 @@ export default {
           localStorage.setItem("projectKey", payload);
           this.callJira(action, payload);
           break;
-        case "getParentTask":
-          await this.callJira("updateParentTask", payload);
-          this.isCreateTemplate = false;
-          this.callJira("getParentTask", payload);
-          break;
         case "changeStatus":
           this.callJira(action, payload);
           break;
-        case "reset":
-          this.callJira(action);
         default:
           break;
       }
@@ -163,7 +156,6 @@ export default {
       localStorage.removeItem("projectKey");
       this.parentTasks = [];
       this.isChange = true;
-      this.run("reset");
     },
     callJira(action, value = null) {
       chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
