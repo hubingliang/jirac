@@ -12,6 +12,6 @@ npm run zip
 
 ```
 
-drag the Jirac to `chrome://extensions/`
+![](https://github.com/hubingliang/jirac/blob/master/gif/readme.gif)
 
 
