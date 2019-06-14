@@ -6,12 +6,10 @@ Synchronize the status of parent and child tasks for Jira and label subtasks and
 
 ## Install
 
-```bash
-# install extension
-npm run zip
+1. [Download Jirac.crx](https://github.com/hubingliang/jirac/releases/tag/1.0.0) .
 
-```
+2. Drag the Jirac to `chrome://extensions/` .
 
-![](https://github.com/hubingliang/jirac/blob/master/gif/readme.gif)
+3. Input your project Key then click Save button.
 
 
