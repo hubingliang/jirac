@@ -1,5 +1,5 @@
 const axios = require('axios')
-require('babel-polyfill')
+// require('babel-polyfill')
 const initProjectData = async projectKey => {
   const getTransitionsData = async projectId => {
     const initMatrix = (allPaths, allStatus) => {

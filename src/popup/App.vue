@@ -101,7 +101,8 @@
 </template>
 
 <script>
-require("babel-polyfill");
+// require("babel-polyfill");
+// import 'idempotent-babel-polyfill';
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
