@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <img src="@/assets/main.png" class="border-none logo" alt>
+    <img src="@/assets/main.png" class="border-none logo" alt />
     <h3>{{ name }}</h3>
     <h4 v-if="!isChange" class="margin">
       Project Key
@@ -15,16 +15,16 @@
       v-if="isChange"
       placeholder="Project Key"
       v-model="projectKey"
-    >
+    />
 
     <section class="parents" v-if="parentTasks && parentTasks.length > 0 && !isCreateTemplate">
       <div
         class="card"
         v-for="(task,index) in parentTasks"
         :key="index"
-        @click="run('changeStatus',{ task, projectKey })"
+        @click="task.isSelected = !task.isSelected;"
       >
-        <div class="card-body" :class="{'background-warning': task.summary.includes('#Jirac#')}">
+        <div class="card-body" :class="{'background-warning': task.isSelected}">
           <h4 class="card-title">{{ task.key }}</h4>
           <h5 class="card-subtitle">{{ task.assigneeName }}</h5>
           <p class="card-text">{{ task.summary }}</p>
@@ -33,13 +33,14 @@
           <span>{{ task.statusName }}</span>
         </div>
       </div>
+      <button @click="addTag()">confirm</button>
     </section>
 
     <section class="template" ref="template" v-if="isCreateTemplate">
       <div class="card">
         <div class="card-body">
           <h4 class="card-title">{{ title }}</h4>
-          <!-- <h5 class="card-subtitle">{{ currentDate() }}</h5> -->
+          <h5 class="card-subtitle">{{ currentDate() }}</h5>
           <p class="card-text">{{ postscript }}</p>
           <table class="table">
             <thead>
@@ -52,7 +53,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="(item,index) in parentTasks.filter(task=>task.summary.includes('#Jirac#'))"
+                v-for="(item,index) in parentTasks.filter((task) => task.isSelected)"
                 :key="index"
               >
                 <td>{{ index + 1 }}</td>
@@ -67,7 +68,7 @@
           <span class="badge secondary project-key">{{ projectKey }}</span>
         </h4>
         <div class="title">
-          <img src="@/assets/main.png" class="icon border-none" alt>
+          <img src="@/assets/main.png" class="icon border-none" alt />
           <h5>{{ name }}</h5>
         </div>
       </div>
@@ -76,7 +77,7 @@
     <section v-if="isCreateTemplate">
       <div class="form-group">
         <label>title</label>
-        <input type="text" placeholder="title" v-model="title">
+        <input type="text" placeholder="title" v-model="title" />
       </div>
       <div class="form-group">
         <label>Postscript</label>
@@ -86,7 +87,11 @@
 
     <div class="button-box">
       <button @click="run('sync', projectKey)" v-if="!isChange" class="button">Sync Status</button>
-      <button @click="run('updateParentTask', projectKey)" v-if="!isChange" class="button">Add Tag</button>
+      <button
+        @click="run('updateParentTask', projectKey);isCreateTemplate=false"
+        v-if="!isChange"
+        class="button"
+      >Add Tag</button>
       <button
         class="button"
         @click="isCreateTemplate = true"
@@ -101,8 +106,6 @@
 </template>
 
 <script>
-// require("babel-polyfill");
-// import 'idempotent-babel-polyfill';
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
@@ -116,23 +119,29 @@ export default {
       isJiraPage: true,
       isChange: false,
       parentTasks: [],
-      templateList: [],
       isCreateTemplate: false,
-      title: "1.1.1",
-      postscript: "PS:"
+      title: "x.x.x",
+      postscript: "PS:",
+      selectedTask: []
     };
   },
   created() {
     const projectKey = localStorage.getItem("projectKey");
     if (projectKey) {
       this.projectKey = projectKey;
-      // this.run("updateParentTask", projectKey);
     } else {
       this.isChange = true;
     }
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      console.log(request);
-      this.parentTasks = request;
+      this.parentTasks = request.map(task => {
+        if (task.summary.includes("#Jirac#")) {
+          task.isSelected = true;
+          return task;
+        } else {
+          task.isSelected = false;
+          return task;
+        }
+      });
     });
   },
   methods: {
@@ -183,6 +192,17 @@ export default {
     },
     currentDate() {
       return dayjs().format("YYYY-MM-DD HH:mm:ss");
+    },
+    addTag() {
+      const selectedTasks = this.parentTasks.filter(
+        task =>
+          task.isSelected ||
+          (task.summary.includes("#Jirac#") && !task.isSelected)
+      );
+      this.run("changeStatus", {
+        selectedTasks,
+        projectKey: this.projectKey
+      });
     }
   }
 };

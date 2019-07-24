@@ -4,7 +4,6 @@ script.setAttribute('type', 'text/javascript')
 script.setAttribute('src', content)
 document.body.appendChild(script)
 
-// const port = chrome.runtime.connect('foikjjlgaeiegaffeongnkakdcinmhd')
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'sync') {
     window.postMessage(request, '*')
@@ -18,7 +17,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     )
   } else if (request.action === 'changeStatus') {
     window.postMessage(
-      { action: 'changeStatus', task: request.value.task, projectKey: request.value.projectKey },
+      { action: 'changeStatus', selectedTasks: request.value.selectedTasks, projectKey: request.value.projectKey },
       '*',
     )
   }

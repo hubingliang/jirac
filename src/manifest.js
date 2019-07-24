@@ -1,6 +1,6 @@
 module.exports = {
   name: 'Jirac',
-  version: '1.2.0',
+  version: '1.3.0',
   description: 'Jirac',
   author: 'BrownHu',
   manifest_version: 2,

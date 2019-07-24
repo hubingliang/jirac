@@ -1,5 +1,5 @@
 const axios = require('axios')
-// require('babel-polyfill')
+
 const initProjectData = async projectKey => {
   const getTransitionsData = async projectId => {
     const initMatrix = (allPaths, allStatus) => {
@@ -198,8 +198,11 @@ const sync = async projectKey => {
   location.reload()
 }
 const updateParentTask = async projectKey => {
-  const { allParents } = await getIssueData(projectKey)
-  window.postMessage({ action: 'updatePopupTask', value: allParents }, '*')
+  const { allIssues } = await getIssueData(projectKey)
+  const allTask = allIssues.filter(task => {
+    return !task.parentId
+  })
+  window.postMessage({ action: 'updatePopupTask', value: allTask }, '*')
   updateTaskStatus()
 }
 const updateTaskStatus = () => {
@@ -243,6 +246,11 @@ const changeSummary = async (task, projectKey) => {
     location.reload()
   }
 }
+const addTag = async (selectedTasks, projectKey) => {
+  for (let task of selectedTasks) {
+    await changeSummary(task, projectKey)
+  }
+}
 if (window.location.href.includes('jira')) {
   window.onload = () => {
     updateTaskStatus()
@@ -256,7 +264,7 @@ if (window.location.href.includes('jira')) {
       } else if (event.data.action === 'updateParentTask') {
         updateParentTask(event.data.projectKey)
       } else if (event.data.action === 'changeStatus') {
-        changeSummary(event.data.task, event.data.projectKey)
+        addTag(event.data.selectedTasks, event.data.projectKey)
       }
     },
     false,

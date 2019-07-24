@@ -1,7 +1,7 @@
 {
-  "name": "jira-tool",
+  "name": "jirac",
   "description": "A Vue.js Chrome Extension Project",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "author": "Brownhu <1104524352@qq.com>",
   "license": "MIT",
   "private": true,
