@@ -258,7 +258,7 @@ if (window.location.href.includes('jira')) {
   window.addEventListener(
     'message',
     function(event) {
-      console.log('data', event.data)
+      // console.log('data', event.data)
       if (event.data.action === 'sync') {
         sync(event.data.value)
       } else if (event.data.action === 'updateParentTask') {

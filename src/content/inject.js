@@ -25,7 +25,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 window.addEventListener(
   'message',
   function(event) {
-    console.log('data', event.data)
+    // console.log('data', event.data)
     if (event.data.action === 'updatePopupTask') {
       chrome.runtime.sendMessage(event.data.value, function(response) {
         console.log('收到来自后台的回复：' + response)
